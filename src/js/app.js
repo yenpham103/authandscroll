@@ -120,8 +120,9 @@ const renderUsers = (users) => {
 
  </aside>
  <div class="w-full flex flex-col gap-4 ">
-    ${users.map(({ gender, name, location, email, phone, picture }, index) => {
-      return ` <section class=" opacity-100 transition ease-in-out delay-150 section-${index} flex items-center justify-around border-2 border-slate-300 p-4 rounded-lg h-[350px]">
+    ${users
+      .map(({ gender, name, location, email, phone, picture }, index) => {
+        return ` <section class=" opacity-100 transition ease-in-out delay-150 section-${index} flex items-center justify-around border-2 border-slate-300 p-4 rounded-lg h-[350px]">
             <div class="">
                 <div class="flex flex-col gap-1 ">
                     <span class="text-lg font-normal">Giới tính: ${gender}</span>
@@ -136,10 +137,11 @@ const renderUsers = (users) => {
                 <img class=" w-full rounded-full object-cover" src="${picture.thumbnail}" alt="">
             </div>
         </section>`;
-    })}
+      })
+      .join(" ")}
  </div>
 </main>`;
-  return (root.innerHTML = htmlProfile);
+  root.innerHTML = htmlProfile;
 };
 //call api get data
 const getUsers = async () => {
