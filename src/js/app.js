@@ -2,6 +2,7 @@ import { api } from "./api.js";
 const { SERVER_USERS_API, SERVER_AUTH_API } = api;
 
 const root = document.querySelector("#root");
+
 const htmlLogin = `<div class="flex min-h-full flex-col justify-center px-6 py-12 lg:px-8">
 <div class="sm:mx-auto sm:w-full sm:max-w-sm">
     <img class="mx-auto h-10 w-auto" src="https://tailwindui.com/img/logos/mark.svg?color=indigo&shade=600"
@@ -49,8 +50,8 @@ const htmlLogin = `<div class="flex min-h-full flex-col justify-center px-6 py-1
 </div>`;
 //
 const renderUsers = (users) => {
-  const htmlProfile = `    <header class="px-7 py-3 border-b-2 border-gray-300">
- <nav class="flex items-center justify-between">
+  const htmlProfile = `    <header class="px-7 py-3 border-b-2 border-gray-300  w-full z-10 ">
+ <nav class="flex items-center justify-between w-full z-10 top-0 left-0 ">
      <div class="flex items-center justify-center gap-5">
          <div class=" w-10 h-10 rounded-md">
              <img class="object-cover size-full rounded-md" src="./img/logo.png" alt="">
@@ -120,7 +121,7 @@ const renderUsers = (users) => {
  </aside>
  <div class="w-full flex flex-col gap-4 ">
     ${users.map(({ gender, name, location, email, phone, picture }, index) => {
-      return ` <section class=" section-${index} flex items-center justify-around border-2 border-slate-300 p-4 rounded-lg h-[350px]">
+      return ` <section class=" opacity-100 transition ease-in-out delay-150 section-${index} flex items-center justify-around border-2 border-slate-300 p-4 rounded-lg h-[350px]">
             <div class="">
                 <div class="flex flex-col gap-1 ">
                     <span class="text-lg font-normal">Giới tính: ${gender}</span>
@@ -162,27 +163,31 @@ root.addEventListener("submit", (e) => {
     handleLogin(e.target);
   }
 });
-const getProfile = async () => {
-  if (localStorage.getItem("login_token")) {
-  }
-};
-const renderUi = () => {
+// const getProfile = async () => {
+//   if (localStorage.getItem("login_token")) {
+//   }
+// };
+const renderUi = async () => {
   isLogin = localStorage.getItem("login_token") ? false : true;
   if (isLogin) {
     renderLogin();
   } else {
-    getUsers();
+    await getUsers();
   }
-  getProfile();
+  // await getProfile();
 };
-renderUi();
-const error = root.querySelector(".error");
-const showError = (msg) => {
-  return `<div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded fixed top-[20px] right-[20px] " role="alert">
-  <strong class="font-bold">Hey Guy!</strong>
-  <span class="block sm:inline">${msg}.</span>
-</div>`;
-};
+// const reRender = async () => {
+//   await renderUi();
+// };
+// reRender();
+
+// const error = root.querySelector(".error");
+// const showError = (msg) => {
+//   return `<div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded fixed top-[20px] right-[20px] " role="alert">
+//   <strong class="font-bold">Hey Guy!</strong>
+//   <span class="block sm:inline">${msg}.</span>
+// </div>`;
+// };
 //handleLogin
 const handleLogin = async (form) => {
   const buttonBtn = form.querySelector("button");
@@ -205,14 +210,14 @@ const handleLogin = async (form) => {
   buttonBtn.innerText = "Sign in";
   buttonBtn.disabled = false;
   if (!response.ok) {
-    error.innerHTML = showError("Tài khoản không chính xác");
+    console.log("Lỗi");
+    // error.innerHTML = showError("Tài khoản không chính xác");
     return;
   } else {
-    error.innerHTML = "";
   }
   const tokens = await response.json();
   localStorage.setItem("login_token", JSON.stringify(tokens));
-  renderUi();
+  await renderUi();
 };
 root.addEventListener("click", (e) => {
   if (e.target.classList.contains("logout")) {
@@ -220,10 +225,76 @@ root.addEventListener("click", (e) => {
     handleLogout();
   }
 });
-const handleLogout = () => {
+const handleLogout = async () => {
   localStorage.removeItem("login_token");
-  renderUi();
+  await renderUi();
 };
+
 //handle scroll
-if (localStorage.getItem("login_token")) {
-}
+const handleNav = () => {
+  const header = root.querySelector("header");
+  const nav = header.querySelector("nav");
+  const navHeight = nav.getBoundingClientRect().height;
+  if (header) {
+    const stickyNav = function (entries) {
+      const [entry] = entries;
+      if (!entry.isIntersecting) {
+        nav.classList.add("fixed", "bg-slate-50", "px-7", "py-3");
+      } else {
+        nav.classList.remove("fixed", "bg-slate-50", "px-7", "py-3");
+      }
+    };
+    const headerObserver = new IntersectionObserver(stickyNav, {
+      root: null,
+      threshold: 0,
+      rootMargin: `-${navHeight}px`,
+    });
+    headerObserver.observe(header);
+  } else {
+    console.log("Header not found");
+  }
+};
+const handleBody = () => {
+  const allSections = document.querySelectorAll("section");
+  const revealSection = function (entries, observer) {
+    const [entry] = entries;
+    if (!entry.isIntersecting) return;
+    entry.target.classList.remove("opacity-0");
+    entry.target.classList.remove("translate-y-32");
+    observer.unobserve(entry.target);
+  };
+  const sectionObserver = new IntersectionObserver(revealSection, {
+    root: null,
+    threshold: 0.15,
+  });
+
+  const firstTwoSections = document.querySelectorAll(
+    "section:nth-of-type(-n+2)"
+  );
+  firstTwoSections.forEach(function (section) {
+    sectionObserver.observe(section);
+    section.classList.remove("opacity-0");
+    section.classList.remove("translate-y-32");
+  });
+
+  if (allSections.length <= 2) {
+    return;
+  }
+
+  allSections.forEach(function (section, index) {
+    if (index >= 2) {
+      sectionObserver.observe(section);
+      section.classList.add("opacity-0");
+      section.classList.add("translate-y-32");
+    }
+  });
+};
+const handleScroll = async () => {
+  await renderUi();
+  if (!isLogin) {
+    console.log("nhận");
+    handleNav();
+    handleBody();
+  }
+};
+handleScroll();
